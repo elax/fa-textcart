@@ -323,6 +323,7 @@ class TextCartManager {
     display_error("Can't find line details with ".join(", ",array($stock_code, $quantity, $price, $discount, $description)));
     return null;
   }
+
   function parse_line($line) {
     global $mode_map;
     #echo "parsing : $line<br/>";
@@ -349,7 +350,7 @@ class TextCartManager {
       $mode = $this->mode_map[$matches[1]];
       $stock_code =  $matches[2];
       $fields_str = $matches[3];
-      $description = trim($matches[4], '" ');
+      $description = trim(@$matches[4], '" ');
 
       # Hack to allow spaces between attribute qualifier
       $fields_str = preg_replace('/([+$^])\s*/', '\1' , $fields_str);
@@ -379,7 +380,7 @@ class TextCartManager {
           display_error("price already set for line '$line'");
           return;
         };
-        $price = $matches[1] . $matches[2];//  ack to get first match or the second one
+        $price = $matches[1] . @$matches[2];//  ack to get first match or the second one
       }
       elseif (preg_match('/^(\d+(?:.\d+)?'.PARAM_REG.')%$/', $field, $matches)) {
         if($discount) {
