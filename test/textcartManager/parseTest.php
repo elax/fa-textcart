@@ -1,20 +1,6 @@
 <?php
+require_once('test/helper.php');
 
-$path_to_root = '../../';
-require_once 'includes/textcart_manager.inc';
-
-
-/*** mock some FA functions ***/
-
-function display_error($msg) {
-}
-
-/** create a date object **/
-/** here, we just create a string **/
-function __date($year, $month, $day) {
-		return "Date: $year/$month/$day";
-}
-/*** end mock ***/
 class ParseTest extends PHPUnit_Framework_TestCase {
 	protected $cart;
 	protected $mgr;
@@ -94,7 +80,6 @@ class ParseTest extends PHPUnit_Framework_TestCase {
 
     public function assertParse($line, $mode,  $stock_code, $quantity, $price, $discount=null, $description=null, $date=null)
     {
-			$data = $this->mgr->parse_line($line);
 			$data = $this->mgr->parse_line($line);
 			$this->assertEquals($data, array(
       "mode" => $mode
