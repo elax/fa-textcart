@@ -76,6 +76,22 @@ class TextcartManagerTest extends PHPUnit_Framework_TestCase {
 			$this->assertParse($line, NORMAL_LINE,  $stock_code, $quantity, $price, $discount, $description, $date);
 		}
 
+		public function parseAdvanced() {
+			return array(
+								array("A 10 ", NORMAL_LINE, "A", '10', null)
+								,array("+A 10 ", INSERT_MODE, "A", '10', null)
+								,array("=A 10 ", UPDATE_MODE, "A", '10', null)
+								,array("-A 10 ", DELETE_MODE, "A", '10', null)
+			);
+		}
+
+		/**
+		 * @dataProvider parseAdvanced
+		 */
+    public function testAdvanced($line, $mode,  $stock_code, $quantity, $price, $discount=null, $description=null, $date=null) {
+			$this->assertParse($line, $mode,  $stock_code, $quantity, $price, $discount, $description, $date);
+		}
+
     public function assertParse($line, $mode,  $stock_code, $quantity, $price, $discount=null, $description=null, $date=null)
     {
 			$data = $this->mgr->parse_line($line);
