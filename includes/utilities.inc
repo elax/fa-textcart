@@ -51,13 +51,19 @@ function expand_template($template, $value, $default_value=null) {
     $value = str_replace('@', $default_value, $value); 
   #echo "    default template=$template value=$value default_value=$default_value<br/>";
 
-      #evaluate expression 
+      #evaluate arithmtic expression 
       if(preg_match('/^\((.*)\)$/', $value, $matches)) {
-        // keep only arithmetical expression
-        $to_eval =  preg_replace('/[a-zA-Z]*/', "", $matches[1]);
-        #echo "eval trimmed '$matches[1]' => '$to_eval' <br/>";
-        eval("\$value=$to_eval;");
-  #echo "replaced template=$template value=$value default_value=$default_value<br/>";
+				$expression = $matches[1];
+				if(preg_match('/^!(.*)/', $expression, $matches)) {
+					$value = $matches[1];
+				}
+				else {
+					// keep only arithmetical expression
+					$to_eval =  preg_replace('/[a-zA-Z]*/', "", $expression);
+					#echo "eval trimmed '$matches[1]' => '$to_eval' <br/>";
+					eval("\$value=$to_eval;");
+					#echo "replaced template=$template value=$value default_value=$default_value<br/>";
+				 }
       }
     return $value;
   }
