@@ -15,7 +15,7 @@ function __date($year, $month, $day) {
 		return "Date: $year/$month/$day";
 }
 /*** end mock ***/
-class TextcartManagerTest extends PHPUnit_Framework_TestCase {
+class ParseTest extends PHPUnit_Framework_TestCase {
 	protected $cart;
 	protected $mgr;
 
