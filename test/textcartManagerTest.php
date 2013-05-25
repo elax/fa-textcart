@@ -4,10 +4,17 @@ $path_to_root = '../../';
 require_once 'includes/textcart_manager.inc';
 
 
+/*** mock some FA functions ***/
 
 function display_error($msg) {
-	
 }
+
+/** create a date object **/
+/** here, we just create a string **/
+function __date($year, $month, $day) {
+		return "Date: $year/$month/$day";
+}
+/*** end mock ***/
 class TextcartManagerTest extends PHPUnit_Framework_TestCase {
 	protected $cart;
 	protected $mgr;
@@ -29,9 +36,16 @@ class TextcartManagerTest extends PHPUnit_Framework_TestCase {
 							,array("A $17 ", "A", null, '17', 0)
 							,array("A 2 7.0 ", "A", '2', '7.0', 0)
 							,array("A 7.0 2 ", "A", '2', '7.0', 0)
-							,array("A $(7.0) 2 ", "A", '2', '7.0', 0)
-							,array("A 7.0 +(2 ) ", "A", '2', '7.0', 0)
-							,array("A 7.0 +(2.5 ) ", "A", '2.5', '7.0', 0)
+							,array("A + 7.0 $ 2 ", "A", '7.0', '2', 0)
+							/** formula (stuff between parenthesis) needs to stay between parenthesis
+							 * so the manager knows they are formula (this change the priority) */
+							,array("A $(7) 2 ", "A", '2', '(7)', 0)
+							,array("A 7.0 +(2.1) ", "A", '(2.1)', '7.0', 0)
+							,array("A 7.0 ((@+.1)*#) ", "A", '((@+.1)*#)', '7.0', 0)
+							/*** test comment and spaces ***/
+							,array("    A + 7.0 $ 2 ", "A", '7.0', '2', 0)
+							,array("    A + 7.0 $ 2 | this a description    ", "A", '7.0', '2', 0, "this a description")
+							,array("    A + 7.0 $ 2 | this a description", "A", '7.0', '2', 0, "this a description")
 							);
 	}
 /**
@@ -45,9 +59,12 @@ class TextcartManagerTest extends PHPUnit_Framework_TestCase {
 
 	public function parseDatedExamples() {
 		return array(
+							array("A 10 ^2013/03/01", "A", '10', null, null, null, 'Date: 2013/3/1')
+							,array("A ^2013/03/01 10", "A", '10', null, null, null, 'Date: 2013/3/1')
+							,array("A 2013/03/01 10", "A", '10', null, null, null, 'Date: 2013/3/1')
 							/*** Everything is passed ***/
-							array("A 10 5.0 3% ^2013/03/01' | hello", "A", '10', '5.0', 0.03, "hello", '2013/03/01')
-							,array("A 3% 10 5.0 ^2013/03/01' | hello", "A", '10', '5.0', 0.03, "hello", '2013/03/01')
+							,array("A 10 5.0 3% ^2013/03/01 | hello", "A", '10', '5.0', 0.03, "hello", 'Date: 2013/3/1')
+							,array("A 3% 10 5.0 ^2013/03/01 | hello", "A", '10', '5.0', 0.03, "hello", 'Date: 2013/3/1')
 		);
 	}
 /**
