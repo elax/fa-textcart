@@ -195,7 +195,8 @@ class TextCartManager {
             $this->get_default_price($cart, $stock_code));
           //$price = round2($price, $attributes['price'], user_price_dec());
           $discount = $attributes["discount"];
-          $discount =  expand_template($template_line['discount'], $attributes['discount'], 0);
+					$discount =  expand_template($template_line['discount'], $attributes['discount'], 
+												$this->get_default_discount($cart, $stock_code));
         }
         else {
           $price = 0;
@@ -205,7 +206,11 @@ class TextCartManager {
           $date = expand_template($template_line['date'], $attributes['date'], 
           $this->get_default_date($cart, $stock_code));
         }
-        $description =  expand_template($template_line['description'], $attributes['description'], get_kit_description($stock_code));
+				else {
+					$date = null;
+				}
+
+        $description =  expand_template($template_line['description'], $attributes['description'], $this->get_kit_description($cart, $stock_code));
       }
       else {
         $stock_code = $attributes["stock_code"];
@@ -213,6 +218,7 @@ class TextCartManager {
         $quantity = $attributes["quantity"];
         $price = $attributes["price"];
         $discount = $attributes["discount"];
+        $date = $attributes["date"];
         $description = $attributes["description"];
 
       }
@@ -226,13 +232,10 @@ class TextCartManager {
       #echo "</ul>";
 
       // Checking that product exists, to not process dodgy one
-      $kit = get_item_kit($stock_code);
-      $number = db_num_rows($kit);
-      if ($number == 0) {
+			if(!$this->check_item_exists($stock_code))  {
         display_error("Product '$stock_code' doesn't exist");
         display_error("Line '$line' skipped");
       }
-      db_free_result($kit);
 
       if(!$mode) { $mode = $default_mode; }
       switch ($mode) {
@@ -433,12 +436,23 @@ class TextCartManager {
     return add_days(Today(), 10);
   } 
 
+	function get_kit_description($cart, $stock_code) {
+		return get_kit_description($stock_code);
+	}
+
   function unmodifiable_quantity($cart, $line_no) {
     return 0;
   }
   function quantity($cart, $line_no) {
     return $cart->line_items[$line_no]->quantity;
   }
+
+	function check_item_exists($stock_code) {
+      $kit = get_item_kit($stock_code);
+      $number = db_num_rows($kit);
+      db_free_result($kit);
+			return $number != 0;
+	}
 }
 
 class SalesTextCartManager extends TextCartManager {
