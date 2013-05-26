@@ -436,6 +436,11 @@ class TextCartManager {
     return add_days(Today(), 10);
   } 
 
+	function get_default_discount($cart, $stock_code) {
+		if(empty($cart)) return null;
+		return $cart->default_discount;
+	}
+
 	function get_kit_description($cart, $stock_code) {
 		return get_kit_description($stock_code);
 	}
