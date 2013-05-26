@@ -17,6 +17,7 @@ class ExpandTest extends PHPUnit_Framework_TestCase {
 			,array('2', null, null, '2')  /** use template **/
 
 			,array('10', '5', null, '5') /** value override template one **/
+			,array('10', '0', 'default', '0') /** value override template one **/
 			,array('-#-', '5', 'default', '-5-') /** but not if # in it */
 			,array('-@-', '5', 'default', '5') /** value override if formulat use default */
 			,array('#-@', '5', 'default', '5-default') /** def can be use in template formula **/
@@ -30,6 +31,8 @@ class ExpandTest extends PHPUnit_Framework_TestCase {
 			,array('(10)', '5', null, '10') /** template formula win **/
 			,array('(@)', '5', '2+7', '9') /** template formula win **/
 			,array('(!@)', '5', '2+7', '2+7') /** don't evaluate the expression **/
+
+			,array(null, 0, 5, 0) /** discount bug **/
 
 	
 		);
