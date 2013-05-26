@@ -35,6 +35,8 @@ class ProcessTest extends PHPUnit_Framework_TestCase {
  * @dataProvider processNormalExamples
  */
 	function testNormalExamples($textcart, $stock_code, $quantity, $price, $discount=null, $description=null) {
+
+		$date = null;
 		// Stubbing mgr 
 		$this->mgr->expects($this->any())
 			->method('get_default_price')
@@ -51,6 +53,7 @@ class ProcessTest extends PHPUnit_Framework_TestCase {
 					,$this->equalTo($quantity)
 					,$this->equalTo($price)
 					,$this->equalTo($discount)
+					,$this->equalTo($date)
 					,$this->equalTo($description));
 
 		

@@ -335,7 +335,7 @@ class TextCartManager {
     $stock_code = "";
     $quantity = "";
     $price = "";
-    $discount = "";
+    $discount = null;
     $date=null;
     $description = "";
 
@@ -422,7 +422,7 @@ class TextCartManager {
       ,"stock_code" => $stock_code
       ,"quantity" => $quantity
       ,"price" => $price
-      ,"discount" => $discount/100.0
+      ,"discount" => $discount !== null && $discount !== '' ? $discount/100.0 : null
       ,"description" => $description
       ,"date" => $date
     );
