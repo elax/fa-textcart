@@ -49,8 +49,8 @@ class ParseTest extends PHPUnit_Framework_TestCase {
 							,array("A ^2013/03/01 10", "A", '10', null, null, null, 'Date: 2013/3/1')
 							,array("A 2013/03/01 10", "A", '10', null, null, null, 'Date: 2013/3/1')
 							/*** Everything is passed ***/
-							,array("A 10 5.0 3% ^2013/03/01 | hello", "A", '10', '5.0', 0.03, "hello", 'Date: 2013/3/1')
-							,array("A 3% 10 5.0 ^2013/03/01 | hello", "A", '10', '5.0', 0.03, "hello", 'Date: 2013/3/1')
+							,array("A 10 5.0 3% ^2013/03/01 | hello", "A", '10', '5.0', 3, "hello", 'Date: 2013/3/1')
+							,array("A 3% 10 5.0 ^2013/03/01 | hello", "A", '10', '5.0', 3, "hello", 'Date: 2013/3/1')
 		);
 	}
 /**

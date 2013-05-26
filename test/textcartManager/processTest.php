@@ -19,6 +19,7 @@ class ProcessTest extends PHPUnit_Framework_TestCase {
 
 	public function processNormalExamples() {
 		return array(
+/*
 							array("A", "A", 1, 5.2, 0.02)
 							,array("A 3", "A", 3, 5.2, 0.02)
 							,array("A $3", "A", 1, 3, 0.02)
@@ -28,6 +29,14 @@ class ProcessTest extends PHPUnit_Framework_TestCase {
 							,array(":# 5%\nA", "A", 1, 5.2, 0.05)
 							,array("A 0%", "A", 1, 5.2, 0)
 							,array("A 10%", "A", 1, 5.2, 0.1)
+
+							// overriding discount 
+							,array(":# 0%\nA 5%", "A", 1, 5.2, 0.05) // line win
+							,array(":# 10%\nA 0%", "A", 1, 5.2, 0)
+							,array(":# (0)%\nA 0.5%", "A", 1, 5.2, 0) // template win
+							,array(":# (10)%\nA 0%", "A", 1, 5.2, 0.1)
+							,*/array(":A (10)%\nA ", "A", 1, 5.2, 0.1)
+							,array(":# 10%\nA 35 ", "A", 1, 5.2, 0.1)
 							);
 	}
 

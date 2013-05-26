@@ -223,6 +223,9 @@ class TextCartManager {
 
       }
 
+			// convert the percentage to float.
+			if($discount) $discount /= 100;
+
       #echo "Stock Code : $stock_code</br><ul>";
       #echo "<li>mode : $mode</li>";
       #echo "<li>quantity : $quantity</li>"   ;
@@ -422,7 +425,7 @@ class TextCartManager {
       ,"stock_code" => $stock_code
       ,"quantity" => $quantity
       ,"price" => $price
-      ,"discount" => $discount !== null && $discount !== '' ? $discount/100.0 : null
+      ,"discount" => $discount
       ,"description" => $description
       ,"date" => $date
     );
@@ -438,7 +441,7 @@ class TextCartManager {
 
 	function get_default_discount($cart, $stock_code) {
 		if(empty($cart)) return null;
-		return $cart->default_discount;
+		return 100*$cart->default_discount;
 	}
 
 	function get_kit_description($cart, $stock_code) {
