@@ -599,6 +599,16 @@ class POTextCartManager extends TextCartManager {
   }
 }
 
+class DeliveryPOTextCartManager extends POTextCartManager {
+  function update_cart_item($cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
+	  $item = $cart->line_items[$line_no];
+    if($quantity > ($item->quantity - $item->qty_done))
+      display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
+    else
+	    $item->receive_qty = $quantity;
+  }
+}
+
 class ItemsTextCartManager extends TextCartManager {
   function cart_to_text_v($cart) {
     if (count($cart->line_items) == 0) {
