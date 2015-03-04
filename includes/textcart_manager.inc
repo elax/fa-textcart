@@ -52,7 +52,7 @@ class TextCartManager {
     }
   }
 
-  function tab_display($title, $cart, $display_classic_cart) {
+  function tab_display(&$title, &$cart, $display_classic_cart) {
     tabbed_content_start('tabs', array(
       'classic_cart' => array(_('&Cart'), true),
       'textcart' => array(_('&Text'), true),
@@ -69,7 +69,7 @@ class TextCartManager {
     tabbed_content_end();
   }
 
-  function display_textcart($title, $cart) {
+  function display_textcart($title, &$cart) {
     div_start('textcart');	
     display_heading($title);
     start_table(TABLESTYLE, "width=100%");
@@ -108,7 +108,7 @@ class TextCartManager {
   var $use_date=false;
   var $delete_on_zero = true;
 
-  function cart_to_text($cart) {
+  function cart_to_text(&$cart) {
     $text = $this->doc_text."
 
 
@@ -128,7 +128,7 @@ class TextCartManager {
       );
   }
 
-  function cart_to_text_v($cart)  {
+  function cart_to_text_v(&$cart)  {
     $text = "";
     $user_price_dec = user_price_dec();
 
@@ -158,10 +158,10 @@ class TextCartManager {
     $this->process_textcart($cart, $text, $default_mode);
   }
 
-  function clear_cart($cart) {
+  function clear_cart(&$cart) {
     $cart->line_items = array();  // clear_items doesn't work, can't update the price if we are using it
   }
-  function process_textcart($cart, $textcart, $default_mode) {
+  function process_textcart(&$cart, $textcart, $default_mode) {
     $template_line = null;
     foreach (explode("\n", $textcart) as $line) {
 			# exit if we reach the --END-- line
@@ -281,21 +281,21 @@ class TextCartManager {
     }
   }
 
-  function remove_from_cart($cart, $line_no, $stock_code) {
+  function remove_from_cart(&$cart, $line_no, $stock_code) {
     if($this->unmodifiable_quantity($cart, $line_no) > 0)
       display_error("'$stock_code' can not be deleted because some of it has already been dispatched or invoiced");
     else
         $cart->remove_from_cart($line_no);
   }
 
-  function update_cart_item($cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
+  function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
     if($this->unmodifiable_quantity($cart, $line_no) > $quantity)
       display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
     else
         $cart->update_cart_item($line_no, $quantity, $price, $discount, $description);
   }
 
-  function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
+  function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     if ($quantity>0)
         add_to_order($cart, $stock_code, $quantity, $price, $discount, $description );
     else 
@@ -303,7 +303,7 @@ class TextCartManager {
   }
 
   // This function remember what has been found and don't find it twice.
-  function find_line_number($cart, $stock_code, $quantity=null, $price=null, $discount=null,  $description=null) {
+  function find_line_number(&$cart, $stock_code, $quantity=null, $price=null, $discount=null,  $description=null) {
 	  $count = $this->find_count[$stock_code];
 	  $to_skip = $count+0;
 
@@ -431,27 +431,27 @@ class TextCartManager {
     );
 
   }
-  function get_default_price($cart, $stock_code) {
+  function get_default_price(&$cart, $stock_code) {
     return get_standard_cost($stock_code);
   }
 
-  function get_default_date($cart, $stock_code) {
+  function get_default_date(&$cart, $stock_code) {
     return add_days(Today(), 10);
   } 
 
-	function get_default_discount($cart, $stock_code) {
+	function get_default_discount(&$cart, $stock_code) {
 		if(empty($cart)) return null;
 		return 100*$cart->default_discount;
 	}
 
-	function get_kit_description($cart, $stock_code) {
+	function get_kit_description(&$cart, $stock_code) {
 		return get_kit_description($stock_code);
 	}
 
-  function unmodifiable_quantity($cart, $line_no) {
+  function unmodifiable_quantity(&$cart, $line_no) {
     return 0;
   }
-  function quantity($cart, $line_no) {
+  function quantity(&$cart, $line_no) {
     return $cart->line_items[$line_no]->quantity;
   }
 
@@ -465,23 +465,23 @@ class TextCartManager {
 
 class SalesTextCartManager extends TextCartManager {
 
-  function get_default_price($cart, $stock_code) {
+  function get_default_price(&$cart, $stock_code) {
             return get_kit_price($stock_code, $cart->customer_currency,
               $cart->sales_type, $cart->price_factor);
   }
-  function unmodifiable_quantity($cart, $line_no) {
+  function unmodifiable_quantity(&$cart, $line_no) {
     return $cart->line_items[$line_no]->qty_done;
   }
 }
 
 class DeliverySalesTextCartManager extends SalesTextCartManager {
 	var $delete_on_zero = false;
-  function quantity($cart, $line_no) {
+  function quantity(&$cart, $line_no) {
     $item = $cart->line_items[$line_no];
     return $item->quantity - $item->qty_done;
   }
 
-  function unmodifiable_quantity($cart, $line_no) {
+  function unmodifiable_quantity(&$cart, $line_no) {
     return 0;
   }
 
@@ -506,7 +506,7 @@ class DeliverySalesTextCartManager extends SalesTextCartManager {
 
 	  return $this->_location_list;
   }
-  function cart_to_text($cart) {
+  function cart_to_text(&$cart) {
     $text = $this->doc_text."
 
 
@@ -548,7 +548,7 @@ $text.="\n";
 	      return "";
   }
 
-  function update_cart_item($cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
+  function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
 	  $item = $cart->line_items[$line_no];
     if($quantity > ($item->quantity - $item->qty_done))
       display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
@@ -562,7 +562,7 @@ class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
    
-  function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
+  function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     if ($quantity>0)
         $cart->add_to_order(count($cart->line_items), $stock_code, $quantity,
           $description, $price , '',
@@ -571,20 +571,20 @@ class POTextCartManager extends TextCartManager {
       display_error("$stock_code qty $quantity negative quantity not allowed");
   }
 
-  function remove_from_cart($cart, $line_no, $stock_code) {
+  function remove_from_cart(&$cart, $line_no, $stock_code) {
         $cart->remove_from_order($line_no);
   }
-  function update_cart_item($cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
+  function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
     if($this->unmodifiable_quantity($cart, $line_no) > $quantity)
       display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
     else
         $cart->update_order_item($line_no, $quantity, $price, $discount, $date, $description);
   }
-  function unmodifiable_quantity($cart, $line_no) {
+  function unmodifiable_quantity(&$cart, $line_no) {
     $line = $cart->line_items[$line_no];
     return max($line->qty_inv, $line->qty_received);
   }
-  function get_default_price($cart, $stock_code) {
+  function get_default_price(&$cart, $stock_code) {
     return get_purchase_price($_POST['supplier_id'], $stock_code);
   }
   function item_to_text($item, $user_price_dec) {
@@ -600,7 +600,7 @@ class POTextCartManager extends TextCartManager {
 }
 
 class DeliveryPOTextCartManager extends POTextCartManager {
-  function update_cart_item($cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
+  function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
 	  $item = $cart->line_items[$line_no];
     if($quantity > ($item->quantity - $item->qty_done))
       display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
@@ -610,7 +610,7 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 }
 
 class ItemsTextCartManager extends TextCartManager {
-  function cart_to_text_v($cart) {
+  function cart_to_text_v(&$cart) {
     if (count($cart->line_items) == 0) {
 			return "------------------- START ------------------------
 
@@ -686,7 +686,7 @@ class ItemsAdjTextCartManager extends ItemsTextCartManager {
     return $_POST['StockLocation'];
   }
 
-  function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
+  function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     # filter quantity depending of the Mode
     $mode = $_POST['Increase'];
     if ($_POST['Increase']==1) {
