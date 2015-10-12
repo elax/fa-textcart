@@ -177,13 +177,17 @@ class TextCartManager {
       $line = $matches[2];
       $line_mode = $this->line_mode_map[$matches[1]];
 
+      if(preg_match('#^\$\s*(\w+)\s*=\s*([a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$tmp)){
+        display_error( _("hii".$tmp[2]));
+        $_POST[$tmp[1]]=$tmp[2];
+        return;
+      }
       $attributes = $this->parse_line($line);
 
       if ($line_mode == TEMPLATE_LINE) {
         $template_line = $attributes ? $attributes : array();
         continue;
       }
-
       if (!$attributes) continue;
       if ($line_mode == NORMAL_LINE) {
         $stock_code = expand_template($template_line['stock_code'], $attributes['stock_code']);
@@ -219,7 +223,6 @@ class TextCartManager {
         $discount = $attributes["discount"];
         $date = $attributes["date"];
         $description = $attributes["description"];
-
       }
 
 			// convert the percentage to float.
@@ -346,6 +349,7 @@ class TextCartManager {
       // empty line, skip
       return;
     }
+
     // extract SKU and descriptions
     if (!preg_match('/^([+\-=])?\s*([^\s,;]+)(?:([^|]*)(?:\|\s*(.*)\s*)?)?/', 
       htmlspecialchars_decode($line), $matches)) {
