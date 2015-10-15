@@ -162,21 +162,26 @@ class TextCartManager {
     $cart->line_items = array();  // clear_items doesn't work, can't update the price if we are using it
   }
 
-  function handle_high_frame($cart,$line){
-    if(preg_match('#^\$(\w+)=([a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
-        $tab=$this->allocate_library_to_variable($cart);
-	$_POST[$tab[$matches[1]]]=$matches[2];
+
+function handle_high_frame($cart,$line){
+    if(preg_match('#^\$(\w+)=([.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
+        $tab=$this->find_right_variable_name($cart);
+	if($tab[$matches[1]]=="email"){
+	  $_POST['customer_id']=$this->get_customer_id_from_email($matches[2]);
+	} else {
+	  $_POST[$tab[$matches[1]]]=$matches[2];
+	}
 	return true;
     }
     return false;
   }
 
-  function allocate_library_to_variable($cart){
+  function find_right_variable_name($cart){
        $array1=array(
         "ref"=>"ref"
         ,"reference"=>"ref"
         ,"Reference"=>"ref");
-	$array2=$this->allocate_library_to_var($cart);
+	$array2=$this->find_right_variable_class_name($cart);
 	$array3=array_merge($array1,$array2);
 	return $array3; 
   }
@@ -485,12 +490,31 @@ class TextCartManager {
 }
 
 class SalesTextCartManager extends TextCartManager {
-  function allocate_library_to_var($cart){
+  function get_id_from_email($mail){
+	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE email=".db_escape($mail);
+	$result= db_query($sql, "could not get customer id");
+	$row=db_fetch_row($result);
+	return $row[0];
+}
+
+  function get_customer_id_from_email($mail){
+	$name=$this->get_id_from_email($mail);
+	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($name);
+	$result = db_query($sql, "could not get customer id");
+	$row=db_fetch_row($result);
+	return $row[0];
+}
+
+  function find_right_variable_class_name($cart){
       return array(
         "OrderDate"=>"OrderDate"
         ,"orderdate"=>"OrderDate"
         ,"order_date"=>"OrderDate"
         ,"Orderdate"=>"OrderDate"
+	,"customer"=>"customer_id"
+	,"email"=>"email"
+	,"Email"=>"email"
+	,"mail"=>"email"
         );
 }
   function get_default_price($cart, $stock_code) {
@@ -590,11 +614,16 @@ class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
    
-  function allocate_library_to_var($cart){
+  function find_right_variable_class_name($cart){
       return array(
          "Supplier"=>"supplier_id"
         ,"supplier_id"=>"supplier_id"
         ,"supplier"=>"supplier_id"
+	,"deliverydate"=>"OrderDate"
+	,"DeliveryDate"=>"OrderDate"
+	,"Deliverydate"=>"OrderDate"
+	,"delivery_date"=>"OrderDate"
+	,"Delivery_Date"=>"OrderDate"
         ,"OrderDate"=>"OrderDate"
         ,"orderdate"=>"OrderDate"
         ,"order_date"=>"OrderDate"
@@ -608,12 +637,6 @@ class POTextCartManager extends TextCartManager {
 	,"supplierreference"=>"supp_ref"
 	,"supplier_reference"=>"supp_ref"
 	,"supp_ref"=>"supp_ref"
-	,"Deliver_to"=>"delivery_address"
-	,"deliverto"=>"delivery_address"
-	,"deliver_to"=>"delivery_address"
-	,"Deliverto"=>"delivery_address"
-	,"DeliverTo"=>"delivery_address"
-	,"delivery_address"=>"delivery_address"
 	,"duedate"=>"due_date"
 	,"DueDate"=>"due_date"
 	,"due_date"=>"due_date"
@@ -668,7 +691,7 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 
 class ItemsTextCartManager extends TextCartManager {
   
-  function allocate_library_to_var($cart){
+  function find_right_variable_class_name($cart){
       return array(
 	"date"=>"AdjDate"
        ,"Date"=>"AdjDate"
@@ -754,7 +777,7 @@ class ItemsAdjTextCartManager extends ItemsTextCartManager {
 -- :# +(-#)
 ";
 
-  function allocate_library_to_var($cart){
+  function find_right_variable_class_name($cart){
       return array(
 	"date"=>"AdjDate"
        ,"Date"=>"AdjDate"
