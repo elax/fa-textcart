@@ -27,6 +27,7 @@ class TextCartManager {
   var $cart_mode = null;
   var $find_count = array();
 
+
   function handle_post_request() {
     // Process textcart if needed
     // we need the cart to be already loaded so we can modify it before displaying it
@@ -160,7 +161,27 @@ class TextCartManager {
   function clear_cart($cart) {
     $cart->line_items = array();  // clear_items doesn't work, can't update the price if we are using it
   }
-  function process_textcart($cart, $textcart, $default_mode) {
+
+  function handle_high_frame($cart,$line){
+    if(preg_match('#^\$(\w+)=([a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
+        $tab=$this->allocate_library_to_variable($cart);
+	$_POST[$tab[$matches[1]]]=$matches[2];
+	return true;
+    }
+    return false;
+  }
+
+  function allocate_library_to_variable($cart){
+       $array1=array(
+        "ref"=>"ref"
+        ,"reference"=>"ref"
+        ,"Reference"=>"ref");
+	$array2=$this->allocate_library_to_var($cart);
+	$array3=array_merge($array1,$array2);
+	return $array3; 
+  }
+
+  function process_textcart($cart, $textcart, $default_mode){
     $template_line = null;
     foreach (explode("\n", $textcart) as $line) {
 			# exit if we reach the --END-- line
@@ -173,15 +194,10 @@ class TextCartManager {
       # decide which type of line is
       # ! raw line, no processing
       # : template line
+     if(!$this->handle_high_frame($cart,$line)){ 
       preg_match('/([!:]?)(.*)/', $line, $matches);
       $line = $matches[2];
       $line_mode = $this->line_mode_map[$matches[1]];
-
-      if(preg_match('#^\$\s*(\w+)\s*=\s*([a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$tmp)){
-        display_error( _("hii".$tmp[2]));
-        $_POST[$tmp[1]]=$tmp[2];
-        return;
-      }
       $attributes = $this->parse_line($line);
 
       if ($line_mode == TEMPLATE_LINE) {
@@ -282,6 +298,8 @@ class TextCartManager {
       }
     }
   }
+}
+
 
   function remove_from_cart($cart, $line_no, $stock_code) {
     if($this->unmodifiable_quantity($cart, $line_no) > 0)
@@ -467,7 +485,14 @@ class TextCartManager {
 }
 
 class SalesTextCartManager extends TextCartManager {
-
+  function allocate_library_to_var($cart){
+      return array(
+        "OrderDate"=>"OrderDate"
+        ,"orderdate"=>"OrderDate"
+        ,"order_date"=>"OrderDate"
+        ,"Orderdate"=>"OrderDate"
+        );
+}
   function get_default_price($cart, $stock_code) {
             return get_kit_price($stock_code, $cart->customer_currency,
               $cart->sales_type, $cart->price_factor);
@@ -565,6 +590,35 @@ class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
    
+  function allocate_library_to_var($cart){
+      return array(
+         "Supplier"=>"supplier_id"
+        ,"supplier_id"=>"supplier_id"
+        ,"supplier"=>"supplier_id"
+        ,"OrderDate"=>"OrderDate"
+        ,"orderdate"=>"OrderDate"
+        ,"order_date"=>"OrderDate"
+        ,"Orderdate"=>"OrderDate"
+	,"InvoiceDate"=>"OrderDate"
+	,"invoicedate"=>"OrderDate"  
+	,"invoice_date"=>"OrderDate"
+	,"suppliersreference"=>"supp_ref"
+	,"SupplierReference"=>"supp_ref"
+	,"Supplierreference"=>"supp_ref"
+	,"supplierreference"=>"supp_ref"
+	,"supplier_reference"=>"supp_ref"
+	,"supp_ref"=>"supp_ref"
+	,"Deliver_to"=>"delivery_address"
+	,"deliverto"=>"delivery_address"
+	,"deliver_to"=>"delivery_address"
+	,"Deliverto"=>"delivery_address"
+	,"DeliverTo"=>"delivery_address"
+	,"delivery_address"=>"delivery_address"
+	,"duedate"=>"due_date"
+	,"DueDate"=>"due_date"
+	,"due_date"=>"due_date"
+        );
+    }
   function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     if ($quantity>0)
         $cart->add_to_order(count($cart->line_items), $stock_code, $quantity,
@@ -613,7 +667,22 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 }
 
 class ItemsTextCartManager extends TextCartManager {
-  function cart_to_text_v($cart) {
+  
+  function allocate_library_to_var($cart){
+      return array(
+	"date"=>"AdjDate"
+       ,"Date"=>"AdjDate"
+	,"AdjDate"=>"AdjDate"
+	,"type"=>"type"
+	,"transfertype"=>"type"
+	,"Transfertype"=>"type"
+	,"TransferType"=>"type"
+	,"Transfer_Type"=>"type"
+	,"transfer_type"=>"type"
+      );
+  }
+
+function cart_to_text_v($cart) {
     if (count($cart->line_items) == 0) {
 			return "------------------- START ------------------------
 
@@ -685,6 +754,16 @@ class ItemsAdjTextCartManager extends ItemsTextCartManager {
 -- :# +(-#)
 ";
 
+  function allocate_library_to_var($cart){
+      return array(
+	"date"=>"AdjDate"
+       ,"Date"=>"AdjDate"
+	,"AdjDate"=>"AdjDate"
+	,"detail"=>"type"
+	,"Detail"=>"type"
+	,"type"=>"type"
+	);
+  }
   function get_location() {
     return $_POST['StockLocation'];
   }
