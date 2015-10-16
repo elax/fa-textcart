@@ -166,10 +166,10 @@ class TextCartManager {
 function handle_high_frame($cart,$line){
     if(preg_match('#^\$(\w+)=([-.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
         $variablesmap=$this->give_right_variables_names_map();
-	if($variablesmap[$matches[1]]=="supp_name"){
+	if($variablesmap[$matches[1]]=="supplier_name"){
 	  $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
 	}
-	else if($variablesmap[$matches[1]]=="email" || $variablesmap[$matches[1]]=="name"){
+	else if($variablesmap[$matches[1]]=="email") {
 	  $_POST['customer_id']=$this->get_customer_id_from_other_variable($variablesmap[$matches[1]],$matches[2]);
 	} else {
 	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
@@ -494,7 +494,7 @@ function handle_high_frame($cart,$line){
 
 class SalesTextCartManager extends TextCartManager {
   function get_person_id_from_other_variable($tablename, $name){
-	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE $tablename=".db_escape($name);
+	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE $tablename rlike ".db_escape(" *".$name." *");
 	$result= db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
 	return $row[0];
@@ -629,9 +629,9 @@ class POTextCartManager extends TextCartManager {
 }   
   function right_class_variables_names_map(){
       return array(
-         "Supplier"=>"supplier_id"
+         "Supplier"=>"supplier_name"
+        ,"supplier"=>"supplier_name"
         ,"supplier_id"=>"supplier_id"
-        ,"supplier"=>"supplier_id"
 	,"deliverydate"=>"OrderDate"
 	,"DeliveryDate"=>"OrderDate"
 	,"Deliverydate"=>"OrderDate"
@@ -653,10 +653,10 @@ class POTextCartManager extends TextCartManager {
 	,"duedate"=>"due_date"
 	,"DueDate"=>"due_date"
 	,"due_date"=>"due_date"
-	,"name"=>"supp_name"
-	,"suppliername"=>"supp_name"
-	,"suppname"=>"supp_name"
-	,"supp_name"=>"supp_name"
+	,"name"=>"supplier_name"
+	,"suppliername"=>"supplier_name"
+	,"suppname"=>"supplier_name"
+	,"supp_name"=>"supplier_name"
         );
     }
   function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
