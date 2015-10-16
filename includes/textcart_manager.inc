@@ -1,7 +1,6 @@
 <?php
 include_once($path_to_root . "/modules/textcart/includes/utilities.inc");
 include_once($path_to_root . "/includes/manufacturing.inc");
-
 define ('INSERT_MODE', 1);
 define ('UPDATE_MODE', 2);
 define ('DELETE_MODE', 3);
@@ -27,6 +26,7 @@ class TextCartManager {
 
   var $cart_mode = null;
   var $find_count = array();
+
 
   function handle_post_request() {
     // Process textcart if needed
@@ -161,6 +161,34 @@ class TextCartManager {
   function clear_cart(&$cart) {
     $cart->line_items = array();  // clear_items doesn't work, can't update the price if we are using it
   }
+
+
+function handle_high_frame($cart,$line){
+    if(preg_match('#^\$(\w+)=([-.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
+        $variablesmap=$this->give_right_variables_names_map();
+	if($variablesmap[$matches[1]]=="supplier_name"){
+	  $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
+	}
+	else if($variablesmap[$matches[1]]=="email") {
+	  $_POST['customer_id']=$this->get_customer_id_from_other_variable($variablesmap[$matches[1]],$matches[2]);
+	} else {
+	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
+	}
+	return true;
+    }
+    return false;
+  }
+
+  function give_right_variables_names_map(){
+       $common_variable=array(
+        "ref"=>"ref"
+        ,"reference"=>"ref"
+        ,"Reference"=>"ref");
+	$class_variables=$this->right_class_variables_names_map();
+	$array3=array_merge($common_variable,$class_variables);
+	return $array3; 
+  }
+
   function process_textcart(&$cart, $textcart, $default_mode) {
     $template_line = null;
     foreach (explode("\n", $textcart) as $line) {
@@ -174,17 +202,16 @@ class TextCartManager {
       # decide which type of line is
       # ! raw line, no processing
       # : template line
+     if(!$this->handle_high_frame($cart,$line)){ 
       preg_match('/([!:]?)(.*)/', $line, $matches);
       $line = $matches[2];
       $line_mode = $this->line_mode_map[$matches[1]];
-
       $attributes = $this->parse_line($line);
 
       if ($line_mode == TEMPLATE_LINE) {
         $template_line = $attributes ? $attributes : array();
         continue;
       }
-
       if (!$attributes) continue;
       if ($line_mode == NORMAL_LINE) {
         $stock_code = expand_template($template_line['stock_code'], $attributes['stock_code']);
@@ -220,7 +247,6 @@ class TextCartManager {
         $discount = $attributes["discount"];
         $date = $attributes["date"];
         $description = $attributes["description"];
-
       }
 
 			// convert the percentage to float.
@@ -280,6 +306,8 @@ class TextCartManager {
       }
     }
   }
+}
+
 
   function remove_from_cart(&$cart, $line_no, $stock_code) {
     if($this->unmodifiable_quantity($cart, $line_no) > 0)
@@ -347,6 +375,7 @@ class TextCartManager {
       // empty line, skip
       return;
     }
+
     // extract SKU and descriptions
     if (!preg_match('/^([+\-=])?\s*([^\s,;]+)(?:([^|]*)(?:\|\s*(.*)\s*)?)?/', 
       htmlspecialchars_decode($line), $matches)) {
@@ -464,8 +493,42 @@ class TextCartManager {
 }
 
 class SalesTextCartManager extends TextCartManager {
+  function get_person_id_from_other_variable($tablename, $name){
+	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE $tablename rlike ".db_escape(" *".$name." *");
+	$result= db_query($sql, "could not get customer id");
+	$row=db_fetch_row($result);
+	return $row[0];
+}
 
+<<<<<<< HEAD
   function get_default_price(&$cart, $stock_code) {
+=======
+  function get_customer_id_from_other_variable($variablename,$name){
+	$id=$this->get_person_id_from_other_variable($variablename, $name);
+	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($id);
+	$result = db_query($sql, "could not get customer id");
+	$row=db_fetch_row($result);
+	return $row[0];
+}
+
+  function right_class_variables_names_map(){
+      return array(
+	"customername"=>"name"
+	,"name"=>"name"
+	,"customer_name"=>"name"
+	,"CustomerName"=>"name"
+        ,"OrderDate"=>"OrderDate"
+        ,"orderdate"=>"OrderDate"
+        ,"order_date"=>"OrderDate"
+        ,"Orderdate"=>"OrderDate"
+	,"customer"=>"customer_id"
+	,"email"=>"email"
+	,"Email"=>"email"
+	,"mail"=>"email"
+        );
+}
+  function get_default_price($cart, $stock_code) {
+>>>>>>> bb/post
             return get_kit_price($stock_code, $cart->customer_currency,
               $cart->sales_type, $cart->price_factor);
   }
@@ -561,8 +624,51 @@ $text.="\n";
 class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
+<<<<<<< HEAD
    
   function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
+=======
+
+  function get_supplier_id_from_suppname($supp_name){
+    $sql = "SELECT supplier_id FROM ".TB_PREF."suppliers WHERE supp_ref=".db_escape($supp_name);
+    $result = db_query($sql, "coult not get supplier id");
+    $row = db_fetch_row($result);
+    return $row[0];
+}   
+  function right_class_variables_names_map(){
+      return array(
+         "Supplier"=>"supplier_name"
+        ,"supplier"=>"supplier_name"
+        ,"supplier_id"=>"supplier_id"
+	,"deliverydate"=>"OrderDate"
+	,"DeliveryDate"=>"OrderDate"
+	,"Deliverydate"=>"OrderDate"
+	,"delivery_date"=>"OrderDate"
+	,"Delivery_Date"=>"OrderDate"
+        ,"OrderDate"=>"OrderDate"
+        ,"orderdate"=>"OrderDate"
+        ,"order_date"=>"OrderDate"
+        ,"Orderdate"=>"OrderDate"
+	,"InvoiceDate"=>"OrderDate"
+	,"invoicedate"=>"OrderDate"  
+	,"invoice_date"=>"OrderDate"
+	,"suppliersreference"=>"supp_ref"
+	,"SupplierReference"=>"supp_ref"
+	,"Supplierreference"=>"supp_ref"
+	,"supplierreference"=>"supp_ref"
+	,"supplier_reference"=>"supp_ref"
+	,"supp_ref"=>"supp_ref"
+	,"duedate"=>"due_date"
+	,"DueDate"=>"due_date"
+	,"due_date"=>"due_date"
+	,"name"=>"supplier_name"
+	,"suppliername"=>"supplier_name"
+	,"suppname"=>"supplier_name"
+	,"supp_name"=>"supplier_name"
+        );
+    }
+  function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
+>>>>>>> bb/post
     if ($quantity>0)
         $cart->add_to_order(count($cart->line_items), $stock_code, $quantity,
           $description, $price , '',
@@ -610,7 +716,26 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 }
 
 class ItemsTextCartManager extends TextCartManager {
+<<<<<<< HEAD
   function cart_to_text_v(&$cart) {
+=======
+  
+  function right_class_variables_names_map(){
+      return array(
+	"date"=>"AdjDate"
+       ,"Date"=>"AdjDate"
+	,"AdjDate"=>"AdjDate"
+	,"type"=>"type"
+	,"transfertype"=>"type"
+	,"Transfertype"=>"type"
+	,"TransferType"=>"type"
+	,"Transfer_Type"=>"type"
+	,"transfer_type"=>"type"
+      );
+  }
+
+function cart_to_text_v($cart) {
+>>>>>>> bb/post
     if (count($cart->line_items) == 0) {
 			return "------------------- START ------------------------
 
@@ -682,6 +807,16 @@ class ItemsAdjTextCartManager extends ItemsTextCartManager {
 -- :# +(-#)
 ";
 
+  function right_class_variables_names_map(){
+      return array(
+	"date"=>"AdjDate"
+       ,"Date"=>"AdjDate"
+	,"AdjDate"=>"AdjDate"
+	,"detail"=>"type"
+	,"Detail"=>"type"
+	,"type"=>"type"
+	);
+  }
   function get_location() {
     return $_POST['StockLocation'];
   }
