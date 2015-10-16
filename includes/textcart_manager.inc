@@ -500,9 +500,6 @@ class SalesTextCartManager extends TextCartManager {
 	return $row[0];
 }
 
-<<<<<<< HEAD
-  function get_default_price(&$cart, $stock_code) {
-=======
   function get_customer_id_from_other_variable($variablename,$name){
 	$id=$this->get_person_id_from_other_variable($variablename, $name);
 	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($id);
@@ -522,13 +519,13 @@ class SalesTextCartManager extends TextCartManager {
         ,"order_date"=>"OrderDate"
         ,"Orderdate"=>"OrderDate"
 	,"customer"=>"customer_id"
+	,"customer_id"=>"customer_id"
 	,"email"=>"email"
 	,"Email"=>"email"
 	,"mail"=>"email"
         );
 }
-  function get_default_price($cart, $stock_code) {
->>>>>>> bb/post
+  function get_default_price(&$cart, $stock_code) {
             return get_kit_price($stock_code, $cart->customer_currency,
               $cart->sales_type, $cart->price_factor);
   }
@@ -624,10 +621,6 @@ $text.="\n";
 class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
-<<<<<<< HEAD
-   
-  function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
-=======
 
   function get_supplier_id_from_suppname($supp_name){
     $sql = "SELECT supplier_id FROM ".TB_PREF."suppliers WHERE supp_ref=".db_escape($supp_name);
@@ -667,8 +660,7 @@ class POTextCartManager extends TextCartManager {
 	,"supp_name"=>"supplier_name"
         );
     }
-  function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
->>>>>>> bb/post
+  function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     if ($quantity>0)
         $cart->add_to_order(count($cart->line_items), $stock_code, $quantity,
           $description, $price , '',
@@ -716,9 +708,6 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 }
 
 class ItemsTextCartManager extends TextCartManager {
-<<<<<<< HEAD
-  function cart_to_text_v(&$cart) {
-=======
   
   function right_class_variables_names_map(){
       return array(
@@ -734,8 +723,7 @@ class ItemsTextCartManager extends TextCartManager {
       );
   }
 
-function cart_to_text_v($cart) {
->>>>>>> bb/post
+  function cart_to_text_v(&$cart) {
     if (count($cart->line_items) == 0) {
 			return "------------------- START ------------------------
 
