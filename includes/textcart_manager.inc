@@ -169,8 +169,8 @@ function handle_high_frame($cart,$line){
 	if($variablesmap[$matches[1]]=="supp_name"){
 	  $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
 	}
-	else if($variablesmap[$matches[1]]=="email"){
-	  $_POST['customer_id']=$this->get_customer_id_from_email($matches[2]);
+	else if($variablesmap[$matches[1]]=="email" || $variablesmap[$matches[1]]=="name"){
+	  $_POST['customer_id']=$this->get_customer_id_from_other_variable($variablesmap[$matches[1]],$matches[2]);
 	} else {
 	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
 	}
@@ -493,16 +493,16 @@ function handle_high_frame($cart,$line){
 }
 
 class SalesTextCartManager extends TextCartManager {
-  function get_person_id_from_email($mail){
-	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE email=".db_escape($mail);
+  function get_person_id_from_other_variable($tablename, $name){
+	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE $tablename=".db_escape($name);
 	$result= db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
 	return $row[0];
 }
 
-  function get_customer_id_from_email($mail){
-	$name=$this->get_person_id_from_email($mail);
-	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($name);
+  function get_customer_id_from_other_variable($variablename,$name){
+	$id=$this->get_person_id_from_other_variable($variablename, $name);
+	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($id);
 	$result = db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
 	return $row[0];
@@ -510,7 +510,11 @@ class SalesTextCartManager extends TextCartManager {
 
   function right_class_variables_names_map(){
       return array(
-        "OrderDate"=>"OrderDate"
+	"customername"=>"name"
+	,"name"=>"name"
+	,"customer_name"=>"name"
+	,"CustomerName"=>"name"
+        ,"OrderDate"=>"OrderDate"
         ,"orderdate"=>"OrderDate"
         ,"order_date"=>"OrderDate"
         ,"Orderdate"=>"OrderDate"
