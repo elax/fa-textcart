@@ -164,25 +164,28 @@ class TextCartManager {
 
 
 function handle_high_frame($cart,$line){
-    if(preg_match('#^\$(\w+)=([.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
-        $tab=$this->find_right_variable_name($cart);
-	if($tab[$matches[1]]=="email"){
+    if(preg_match('#^\$(\w+)=([-.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
+        $variablesmap=$this->give_right_variables_names_map();
+	if($variablesmap[$matches[1]]=="supp_name"){
+	  $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
+	}
+	else if($variablesmap[$matches[1]]=="email"){
 	  $_POST['customer_id']=$this->get_customer_id_from_email($matches[2]);
 	} else {
-	  $_POST[$tab[$matches[1]]]=$matches[2];
+	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
 	}
 	return true;
     }
     return false;
   }
 
-  function find_right_variable_name($cart){
-       $array1=array(
+  function give_right_variables_names_map(){
+       $common_variable=array(
         "ref"=>"ref"
         ,"reference"=>"ref"
         ,"Reference"=>"ref");
-	$array2=$this->find_right_variable_class_name($cart);
-	$array3=array_merge($array1,$array2);
+	$class_variables=$this->right_class_variables_names_map();
+	$array3=array_merge($common_variable,$class_variables);
 	return $array3; 
   }
 
@@ -490,7 +493,7 @@ function handle_high_frame($cart,$line){
 }
 
 class SalesTextCartManager extends TextCartManager {
-  function get_id_from_email($mail){
+  function get_person_id_from_email($mail){
 	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE email=".db_escape($mail);
 	$result= db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
@@ -498,14 +501,14 @@ class SalesTextCartManager extends TextCartManager {
 }
 
   function get_customer_id_from_email($mail){
-	$name=$this->get_id_from_email($mail);
+	$name=$this->get_person_id_from_email($mail);
 	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($name);
 	$result = db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
 	return $row[0];
 }
 
-  function find_right_variable_class_name($cart){
+  function right_class_variables_names_map(){
       return array(
         "OrderDate"=>"OrderDate"
         ,"orderdate"=>"OrderDate"
@@ -613,8 +616,14 @@ $text.="\n";
 class POTextCartManager extends TextCartManager {
   var $cart_key = "PO";
   var $use_date = true;
-   
-  function find_right_variable_class_name($cart){
+
+  function get_supplier_id_from_suppname($supp_name){
+    $sql = "SELECT supplier_id FROM ".TB_PREF."suppliers WHERE supp_ref=".db_escape($supp_name);
+    $result = db_query($sql, "coult not get supplier id");
+    $row = db_fetch_row($result);
+    return $row[0];
+}   
+  function right_class_variables_names_map(){
       return array(
          "Supplier"=>"supplier_id"
         ,"supplier_id"=>"supplier_id"
@@ -640,6 +649,10 @@ class POTextCartManager extends TextCartManager {
 	,"duedate"=>"due_date"
 	,"DueDate"=>"due_date"
 	,"due_date"=>"due_date"
+	,"name"=>"supp_name"
+	,"suppliername"=>"supp_name"
+	,"suppname"=>"supp_name"
+	,"supp_name"=>"supp_name"
         );
     }
   function add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
@@ -691,7 +704,7 @@ class DeliveryPOTextCartManager extends POTextCartManager {
 
 class ItemsTextCartManager extends TextCartManager {
   
-  function find_right_variable_class_name($cart){
+  function right_class_variables_names_map(){
       return array(
 	"date"=>"AdjDate"
        ,"Date"=>"AdjDate"
@@ -777,7 +790,7 @@ class ItemsAdjTextCartManager extends ItemsTextCartManager {
 -- :# +(-#)
 ";
 
-  function find_right_variable_class_name($cart){
+  function right_class_variables_names_map(){
       return array(
 	"date"=>"AdjDate"
        ,"Date"=>"AdjDate"
