@@ -1,4 +1,5 @@
 <?php
+
 include_once($path_to_root . "/modules/textcart/includes/utilities.inc");
 include_once($path_to_root . "/includes/manufacturing.inc");
 define ('INSERT_MODE', 1);
@@ -52,7 +53,7 @@ class TextCartManager {
     }
   }
 
-  function tab_display(&$title, &$cart, $display_classic_cart) {
+  function tab_display($title, &$cart, $display_classic_cart) {
     tabbed_content_start('tabs', array(
       'classic_cart' => array(_('&Cart'), true),
       'textcart' => array(_('&Text'), true),
