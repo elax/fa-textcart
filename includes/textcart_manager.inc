@@ -494,16 +494,9 @@ function handle_high_frame($cart,$line){
 }
 
 class SalesTextCartManager extends TextCartManager {
-  function get_person_id_from_other_variable($tablename, $name){
-	$sql= "SELECT id FROM ".TB_PREF."crm_persons WHERE $tablename rlike ".db_escape(" *".$name." *");
-	$result= db_query($sql, "could not get customer id");
-	$row=db_fetch_row($result);
-	return $row[0];
-}
 
   function get_customer_id_from_other_variable($variablename,$name){
-	$id=$this->get_person_id_from_other_variable($variablename, $name);
-	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts WHERE type='customer' AND person_id=".db_escape($id);
+	$sql= "SELECT entity_id FROM ".TB_PREF."crm_contacts JOIN ".TB_PREF."crm_persons p ON (person_id=p.id) WHERE type='customer' AND $variablename rlike ".db_escape(" *$name *");
 	$result = db_query($sql, "could not get customer id");
 	$row=db_fetch_row($result);
 	return $row[0];
