@@ -656,6 +656,8 @@ class POTextCartManager extends TextCartManager {
 	,"suppliername"=>"supplier_name"
 	,"suppname"=>"supplier_name"
 	,"supp_name"=>"supplier_name"
+    ,"location"=>"StkLocation"
+    ,"loc"=>"StkLocation"
         );
     }
   function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
