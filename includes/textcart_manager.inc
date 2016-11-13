@@ -78,7 +78,7 @@ class TextCartManager {
     end_table();
     //submit_center("Name", "Value", true, "title", "ajaxsubmit");
     submit_center_first("ReplaceTextCart", "Replace");
-    submit("ModifyTextCart", "Insert");
+    if($this->insert_allowed) submit("ModifyTextCart", "Insert");
     submit("UpdateTextCart", "Update");
     submit_center_last("CancelTextCart", "Cancel");
     div_end();
@@ -108,6 +108,7 @@ class TextCartManager {
   var $use_price=true;
   var $use_date=false;
   var $delete_on_zero = true;
+  var $insert_allowed = true;
 
   function cart_to_text(&$cart) {
     $text = $this->doc_text."
@@ -147,20 +148,22 @@ class TextCartManager {
     $cart = $_SESSION[$this->cart_key];
     $text = $_POST['textcart'];
     if ($clear_cart) {
-      // check that the cart can be deleted
-      foreach($cart->line_items as $line_no => $line) {
-        if($this->unmodifiable_quantity($cart, $line_no> 0)) {
-          display_error("Cannot clear current cart, because some items have been alread delivered or invoiced. Please use Update instead of Replace. ");
-          return;
-        }
-      }
-      $cart->line_items = array();
+        if(!$this->clear_cart($cart)) return;
     } // clear_items doesn't work, can't update the price if we are using it
     $this->process_textcart($cart, $text, $default_mode);
+    $_POST['Update'] = true;
   }
 
   function clear_cart(&$cart) {
+      // check that the cart can be deleted
+      foreach($cart->line_items as $line_no => $line) {
+          if($this->unmodifiable_quantity($cart, $line_no> 0)) {
+              display_error("Cannot clear current cart, because some items have been alread delivered or invoiced. Please use Update instead of Replace. ");
+              return false;
+          }
+      }
     $cart->line_items = array();  // clear_items doesn't work, can't update the price if we are using it
+    return true;
   }
 
 
@@ -698,6 +701,36 @@ class POTextCartManager extends TextCartManager {
 }
 
 class DeliveryPOTextCartManager extends POTextCartManager {
+  var $delete_on_zero = false;
+    var $insert_allowed = false;
+
+    // Textcart lines needs to match the original cart.
+    // Therefore we can only update it.
+    function handle_post_request() {
+        if (isset($_POST['ReplaceTextCart'])) {
+            $_POST['_tabs_sel'] = 'classic_cart'; // Don't display the textcart
+            $this->handle_textcart(true, UPDATE_MODE );
+            //                     ^-- clear the cart
+        }
+        elseif (isset($_POST['UpdateTextCart'])) {
+            $_POST['_tabs_sel'] = 'classic_cart'; // Don't display the textcart
+            $this->handle_textcart(false, UPDATE_MODE );
+        }
+        else {
+            parent::handle_post_request();
+            
+        }
+    }
+
+    // The cart can't actually be cleared. It just need to be reset to 0
+    function clear_cart(&$cart) {
+        foreach($cart->line_items as $line_no => $item) {
+            $item->receive_qty = 0;
+        }
+        return true;
+        
+    }
+    
   function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
 	  $item = $cart->line_items[$line_no];
     if($quantity > ($item->quantity - $item->qty_done))
@@ -705,6 +738,23 @@ class DeliveryPOTextCartManager extends POTextCartManager {
     else
 	    $item->receive_qty = $quantity;
   }
+
+    function item_to_text($item, $user_price_dec) {
+        // remove item fully dispatched
+        if($item->quantity ==  $item->qty_received) return "";
+        // dodgy format excel compatible
+        return sprintf("$item->stock_id\t+ %.${dec}f\t\$ %0.${user_price_dec}f\t^ %s%s\r\n"
+                       ,$item->receive_qty
+                       ,$item->price
+                       ,$item->req_del_date
+                       ,$item->item_description ? "\t| \"$item->item_description\"" : ""
+        );
+   
+        
+    }
+    function unmodifiable_quantity(&$cart, $line_no) {
+        return 0;
+    }
 }
 
 class ItemsTextCartManager extends TextCartManager {
