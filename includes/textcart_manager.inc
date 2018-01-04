@@ -329,7 +329,8 @@ function handle_high_frame($cart,$line){
 
   function add_to_order(&$cart, $stock_code, $quantity, $price, $discount, $date, $description ) {
     if ($quantity>0)
-        add_to_order($cart, $stock_code, $quantity, $price, $discount, $description );
+        // for sales order only
+        add_to_order($cart, $stock_code, $quantity, $price, $discount,$_POST['now_or_never'], $description );
     else 
       display_error("$stock_code qty $quantity negative quantity not allowed");
   }
