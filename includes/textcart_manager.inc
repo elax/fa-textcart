@@ -2,6 +2,7 @@
 
 include_once($path_to_root . "/modules/textcart/includes/utilities.inc");
 include_once($path_to_root . "/includes/manufacturing.inc");
+include_once($path_to_root . "/includes/db/customers_db.inc");
 define ('INSERT_MODE', 1);
 define ('UPDATE_MODE', 2);
 define ('DELETE_MODE', 3);
@@ -168,6 +169,7 @@ class TextCartManager {
 
 
 function handle_high_frame($cart,$line){
+    $old_customer_id = $_POST['customer_id'];
     if(preg_match('#^\$(\w+)=([-.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
         $variablesmap=$this->give_right_variables_names_map();
 	if($variablesmap[$matches[1]]=="supplier_name"){
@@ -178,6 +180,13 @@ function handle_high_frame($cart,$line){
 	} else {
 	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
 	}
+
+    $new_customer_id = $_POST['customer_id'];
+    if($new_customer_id && $old_customer_id != $new_customer_id) {
+        $cust = get_customer($_POST['customer_id']);
+        $_POST['now_or_never']=$cust['now_or_never'];
+        display_warning("setting now or newe ".$_POST['now_or_never']);
+    }
 	return true;
     }
     return false;
@@ -195,7 +204,11 @@ function handle_high_frame($cart,$line){
 
   function process_textcart(&$cart, $textcart, $default_mode) {
     $template_line = null;
-    foreach (explode("\n", $textcart) as $line) {
+    $pre_lines= explode("\n", $textcart);
+    $lines = [];
+    // We need to process the special variable before the actual text cart
+    // for example the now or never default is set when changing the customer
+    foreach ($pre_lines as $line) {
 			# exit if we reach the --END-- line
       preg_match('/^\s*---*\s*END\s*--.*$/', $line, $matches);
 			if ($matches) {
@@ -206,7 +219,9 @@ function handle_high_frame($cart,$line){
       # decide which type of line is
       # ! raw line, no processing
       # : template line
-     if(!$this->handle_high_frame($cart,$line)){ 
+      if(!$this->handle_high_frame($cart,$line)) array_push($lines, $line);
+    }
+    foreach ($lines as $line) {
       preg_match('/([!:]?)(.*)/', $line, $matches);
       $line = $matches[2];
       $line_mode = $this->line_mode_map[$matches[1]];
@@ -308,7 +323,7 @@ function handle_high_frame($cart,$line){
         #echo "price after $price";
         $this->add_to_order($cart, $stock_code, $quantity, $price, $discount, $date, $description );
       }
-    }
+
   }
 }
 
