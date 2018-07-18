@@ -171,23 +171,26 @@ class TextCartManager {
 function handle_high_frame($cart,$line){
     $old_customer_id = $_POST['customer_id'];
     if(preg_match('#^\$(\w+)=([-.@a-zA-Z0-9/_]+)#',htmlspecialchars_decode($line),$matches)){
-        $variablesmap=$this->give_right_variables_names_map();
-	if($variablesmap[$matches[1]]=="supplier_name"){
-	  $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
-	}
-	else if($variablesmap[$matches[1]]=="email") {
-	  $_POST['customer_id']=$this->get_customer_id_from_other_variable($variablesmap[$matches[1]],$matches[2]);
-	} else {
-	  $_POST[$variablesmap[$matches[1]]]=$matches[2];
-	}
+            $variablesmap=$this->give_right_variables_names_map();
+        if($variablesmap[$matches[1]]=="supplier_name"){
+        $_POST['supplier_id']=$this->get_supplier_id_from_suppname($matches[2]);
+        }
+        else if($variablesmap[$matches[1]]=="email") {
+        $_POST['customer_id']=$this->get_customer_id_from_other_variable($variablesmap[$matches[1]],$matches[2]);
+        } else if($variablesmap[$matches[1]]=="sales_type") {
+            $_POST['sales_type'] = $matches[2];
+            // $cart->sales_type = $matches[2];
+        } else {
+        $_POST[$variablesmap[$matches[1]]]=$matches[2];
+        }
 
-    $new_customer_id = $_POST['customer_id'];
-    if($new_customer_id && $old_customer_id != $new_customer_id) {
-        $cust = get_customer($_POST['customer_id']);
-        $_POST['now_or_never']=$cust['now_or_never'];
-        display_warning("setting now or newe ".$_POST['now_or_never']);
-    }
-	return true;
+        $new_customer_id = $_POST['customer_id'];
+        if($new_customer_id && $old_customer_id != $new_customer_id) {
+            $cust = get_customer($_POST['customer_id']);
+            $_POST['now_or_never']=$cust['now_or_never'];
+            display_warning("setting now or newe ".$_POST['now_or_never']);
+        }
+        return true;
     }
     return false;
   }
@@ -196,7 +199,9 @@ function handle_high_frame($cart,$line){
        $common_variable=array(
         "ref"=>"ref"
         ,"reference"=>"ref"
-        ,"Reference"=>"ref");
+        ,"Reference"=>"ref"
+        ,"sales_type"=>'sales_type'
+        ,"price_list"=>'sales_type');
 	$class_variables=$this->right_class_variables_names_map();
 	$array3=array_merge($common_variable,$class_variables);
 	return $array3; 
