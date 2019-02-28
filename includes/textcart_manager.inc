@@ -2,7 +2,7 @@
 
 include_once($path_to_root . "/modules/textcart/includes/utilities.inc");
 include_once($path_to_root . "/includes/manufacturing.inc");
-include_once($path_to_root . "/includes/db/customers_db.inc");
+include_once($path_to_root . "/sales/includes/db/customers_db.inc");
 define ('INSERT_MODE', 1);
 define ('UPDATE_MODE', 2);
 define ('DELETE_MODE', 3);
