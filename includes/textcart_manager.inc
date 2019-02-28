@@ -242,14 +242,22 @@ function handle_high_frame($cart,$line){
         $mode = $attributes['mode'];
         $quantity =  expand_template($template_line['quantity'], $attributes['quantity'], 1);
         if($this->use_price ) {
-          $price = expand_template($template_line['price'], $attributes['price'], 
-            $this->get_default_price($cart, $stock_code));
+            display_warning($template_line['price'] . " att " . $attributes['price']);
+
+            $default_price = null;
+            if($default_mode != UPDATE_MODE) {
+                //     if we are updating and the price is not set
+                //     we want to keep the initial price instead of using the default one
+                $default_price = $this->get_default_price($cart, $stock_code);
+            }
+        $price = expand_template($template_line['price'], $attributes['price'], $default_price);
+            
+            display_warning("PRICE set to " . $price);
           //$price = round2($price, $attributes['price'], user_price_dec());
           $discount = $attributes["discount"];
 					$discount =  expand_template($template_line['discount'], $attributes['discount'], 
 												$this->get_default_discount($cart, $stock_code));
-        }
-        else {
+        } else {
           $price = 0;
           $discount = 0;
         }
@@ -699,8 +707,17 @@ class POTextCartManager extends TextCartManager {
   function update_cart_item(&$cart, $line_no, $stock_code, $quantity, $price, $discount, $date, $description) {
     if($this->unmodifiable_quantity($cart, $line_no) > $quantity)
       display_error("'$stock_code' can not be updated because some of it has already been dispatched or invoiced");
-    else
-        $cart->update_order_item($line_no, $quantity, $price, $discount, $date, $description);
+    else {
+        // TODO MAYBE in in the main function before calling update_cart_item ?
+        $item = $cart->line_items[$line_no];
+        display_warning("price = " . $price);
+        if(is_null($price)) $price = $item->price;
+        $i = print_r($item, TRUE);
+        display_warning($i);
+        if(is_null($quantity)) $quantity = $item->quantity;
+        if(is_null($description)) $description = $item->description;
+        $cart->update_order_item($line_no, $quantity, $price, $date, $description);
+    }
   }
   function unmodifiable_quantity(&$cart, $line_no) {
     $line = $cart->line_items[$line_no];
